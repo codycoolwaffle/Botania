@@ -10,8 +10,6 @@
  */
 package vazkii.botania.api.subtile;
 
-import java.awt.Color;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.resources.I18n;
@@ -20,14 +18,16 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import vazkii.botania.api.BotaniaAPI;
 import vazkii.botania.api.internal.IManaNetwork;
 import vazkii.botania.api.mana.IManaPool;
-import vazkii.botania.api.sound.BotaniaSoundEvents;
+
+import java.awt.Color;
 
 /**
  * The basic class for a Functional Flower.
@@ -137,7 +137,9 @@ public class SubTileFunctional extends SubTileEntity {
 			return false;
 
 		knownMana = mana;
-		player.world.playSound(null, player.posX, player.posY, player.posZ, BotaniaSoundEvents.ding, SoundCategory.PLAYERS, 0.1F, 1F);
+		SoundEvent evt = ForgeRegistries.SOUND_EVENTS.getValue(DING_SOUND_EVENT);
+		if(evt != null)
+			player.playSound(evt, 0.1F, 1F);
 
 		return super.onWanded(player, wand);
 	}

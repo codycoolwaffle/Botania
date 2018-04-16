@@ -10,14 +10,11 @@
  */
 package vazkii.botania.common.lexicon.page;
 
-import java.lang.reflect.Constructor;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
@@ -26,6 +23,8 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import vazkii.botania.api.internal.IGuiLexiconEntry;
 import vazkii.botania.api.lexicon.LexiconPage;
+
+import java.lang.reflect.Constructor;
 
 public class PageEntity extends LexiconPage{
 
@@ -90,7 +89,7 @@ public class PageEntity extends LexiconPage{
 		GlStateManager.rotate(rotation, 0.0F, 1.0F, 0.0F);
 		RenderHelper.enableStandardItemLighting();
 		Minecraft.getMinecraft().getRenderManager().playerViewY = 180.0F;
-		Minecraft.getMinecraft().getRenderManager().doRenderEntity(entity, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F, false);
+		Minecraft.getMinecraft().getRenderManager().renderEntity(entity, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F, false);
 		GlStateManager.popMatrix();
 		RenderHelper.disableStandardItemLighting();
 		GlStateManager.disableRescaleNormal();

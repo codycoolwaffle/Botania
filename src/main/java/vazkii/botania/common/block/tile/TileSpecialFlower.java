@@ -10,8 +10,6 @@
  */
 package vazkii.botania.common.block.tile;
 
-import java.util.List;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDirt;
 import net.minecraft.block.state.IBlockState;
@@ -25,6 +23,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
@@ -37,7 +36,9 @@ import vazkii.botania.api.wand.IWandBindable;
 import vazkii.botania.common.block.ModBlocks;
 import vazkii.botania.common.block.tile.string.TileRedStringRelay;
 
-public class TileSpecialFlower extends TileMod implements IWandBindable, ISubTileSlowableContainer {
+import java.util.List;
+
+public class TileSpecialFlower extends TileMod implements IWandBindable, ISubTileSlowableContainer, ITickable {
 
 	private static final String TAG_SUBTILE_NAME = "subTileName";
 	private static final String TAG_SUBTILE_CMP = "subTileCmp";
@@ -165,6 +166,13 @@ public class TileSpecialFlower extends TileMod implements IWandBindable, ISubTil
 			subTile.getDrops(list);
 
 		return list;
+	}
+
+	@Override
+	public boolean receiveClientEvent(int id, int param) {
+		if(subTile != null)
+			return subTile.receiveClientEvent(id, param);
+		return super.receiveClientEvent(id, param);
 	}
 
 	@SideOnly(Side.CLIENT)

@@ -10,14 +10,9 @@
  */
 package vazkii.botania.common.entity;
 
-import java.awt.Color;
-
-import javax.annotation.Nonnull;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityMinecart;
-import net.minecraft.inventory.Container;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -39,6 +34,9 @@ import vazkii.botania.common.block.ModBlocks;
 import vazkii.botania.common.block.tile.mana.TilePool;
 import vazkii.botania.common.block.tile.mana.TilePump;
 import vazkii.botania.common.item.ModItems;
+
+import javax.annotation.Nonnull;
+import java.awt.Color;
 
 public class EntityPoolMinecart extends EntityMinecart {
 
@@ -181,7 +179,7 @@ public class EntityPoolMinecart extends EntityMinecart {
 
 					if(can) {
 						pump.hasCartOnTop = true;
-						pump.comparator = (int) ((double) getMana() / (double) TilePool.MAX_MANA * 15);
+						pump.comparator = (int) ((double) getMana() / (double) TilePool.MAX_MANA * 15); // different from TilePool.calculateComparatorLevel, kept for compatibility
 					}
 
 				}
@@ -199,6 +197,11 @@ public class EntityPoolMinecart extends EntityMinecart {
 	protected void readEntityFromNBT(NBTTagCompound cmp) {
 		super.readEntityFromNBT(cmp);
 		setMana(cmp.getInteger(TAG_MANA));
+	}
+
+	@Override
+	public int getComparatorLevel() {
+		return TilePool.calculateComparatorLevel(getMana(), TilePool.MAX_MANA);
 	}
 
 	public int getMana() {

@@ -10,9 +10,6 @@
  */
 package vazkii.botania.common.core.handler;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import baubles.api.BaublesApi;
 import baubles.common.network.PacketHandler;
 import baubles.common.network.PacketSync;
@@ -25,7 +22,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
@@ -33,7 +29,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.items.IItemHandlerModifiable;
-import net.minecraftforge.items.wrapper.InvWrapper;
 import vazkii.botania.api.BotaniaAPIClient;
 import vazkii.botania.api.corporea.CorporeaHelper;
 import vazkii.botania.api.corporea.ICorporeaSpark;
@@ -56,13 +51,10 @@ import vazkii.botania.client.core.handler.BossBarHandler;
 import vazkii.botania.client.core.handler.HUDHandler;
 import vazkii.botania.common.Botania;
 import vazkii.botania.common.block.BlockModFlower;
-import vazkii.botania.common.block.BlockSpecialFlower;
 import vazkii.botania.common.block.ModBlocks;
 import vazkii.botania.common.block.decor.BlockFloatingFlower;
 import vazkii.botania.common.block.subtile.functional.SubTileSolegnolia;
-import vazkii.botania.common.integration.corporea.WrappedDeepStorage;
 import vazkii.botania.common.integration.corporea.WrappedIInventory;
-import vazkii.botania.common.integration.corporea.WrappedStorageDrawers;
 import vazkii.botania.common.item.ModItems;
 import vazkii.botania.common.item.block.ItemBlockSpecialFlower;
 import vazkii.botania.common.item.relic.ItemLokiRing;
@@ -77,6 +69,9 @@ import vazkii.botania.common.lexicon.page.PagePetalRecipe;
 import vazkii.botania.common.lexicon.page.PageRuneRecipe;
 import vazkii.botania.common.lexicon.page.PageText;
 import vazkii.botania.common.lib.LibMisc;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class InternalMethodHandler extends DummyMethodHandler {
 
@@ -96,12 +91,12 @@ public class InternalMethodHandler extends DummyMethodHandler {
 	}
 
 	@Override
-	public LexiconPage craftingRecipesPage(String key, List<IRecipe> recipes) {
+	public LexiconPage craftingRecipesPage(String key, List<ResourceLocation> recipes) {
 		return new PageCraftingRecipe(key, recipes);
 	}
 
 	@Override
-	public LexiconPage craftingRecipePage(String key, IRecipe recipe) {
+	public LexiconPage craftingRecipePage(String key, ResourceLocation recipe) {
 		return new PageCraftingRecipe(key, recipe);
 	}
 
@@ -262,10 +257,12 @@ public class InternalMethodHandler extends DummyMethodHandler {
 		return block instanceof BlockModFlower || block instanceof BlockFloatingFlower || block instanceof ISpecialFlower;
 	}
 
+	// todo use our own sync packet or use the autosync system
 	@Override
 	public void sendBaubleUpdatePacket(EntityPlayer player, int slot) {
-		if(player instanceof EntityPlayerMP)
-			PacketHandler.INSTANCE.sendTo(new PacketSync(player, slot), (EntityPlayerMP) player);
+		if(player instanceof EntityPlayerMP) {
+			PacketHandler.INSTANCE.sendTo(new PacketSync(player, slot, BaublesApi.getBaublesHandler(player).getStackInSlot(slot)), (EntityPlayerMP) player);
+		}
 	}
 	
 	@Override
@@ -274,14 +271,8 @@ public class InternalMethodHandler extends DummyMethodHandler {
 		for(InvWithLocation inv : inventories) {
 			ICorporeaSpark spark = CorporeaHelper.getSparkForInventory(inv);
 			IWrappedInventory wrapped = null;
-			// try StorageDrawers integration
-			if(Botania.storageDrawersLoaded) {
-				wrapped = WrappedStorageDrawers.wrap(inv, spark);
-			}
-			// try DeepStorageUnit
-			if(wrapped == null) {
-				wrapped = WrappedDeepStorage.wrap(inv, spark);
-			}
+			// try integrations
+
 			// last chance - this will always work
 			if(wrapped == null) {
 				wrapped = WrappedIInventory.wrap(inv, spark);

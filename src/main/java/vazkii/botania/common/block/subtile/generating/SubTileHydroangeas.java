@@ -10,10 +10,6 @@
  */
 package vazkii.botania.common.block.subtile.generating;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
@@ -35,6 +31,10 @@ import vazkii.botania.common.Botania;
 import vazkii.botania.common.core.helper.ItemNBTHelper;
 import vazkii.botania.common.lexicon.LexiconData;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 public class SubTileHydroangeas extends SubTileGenerating {
 
 	private static final String TAG_BURN_TIME = "burnTime";
@@ -52,7 +52,6 @@ public class SubTileHydroangeas extends SubTileGenerating {
 			cooldown--;
 			for(int i = 0; i < 3; i++)
 				Botania.proxy.wispFX(supertile.getPos().getX() + 0.5 + Math.random() * 0.2 - 0.1, supertile.getPos().getY() + 0.5 + Math.random() * 0.2 - 0.1, supertile.getPos().getZ() + 0.5 + Math.random() * 0.2 - 0.1, 0.1F, 0.1F, 0.1F, (float) Math.random() / 6, (float) -Math.random() / 30);
-			return;
 		}
 
 		if(burnTime == 0) {

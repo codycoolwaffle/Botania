@@ -13,10 +13,7 @@ package vazkii.botania.common.core.proxy;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemRecord;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -66,12 +63,6 @@ public class ServerProxy implements IProxy {
 	@Override
 	public String getLastVersion() {
 		return LibMisc.BUILD;
-	}
-
-	@Override
-	public void setExtraReach(EntityLivingBase entity, float reach) {
-		if(entity instanceof EntityPlayerMP)
-			((EntityPlayerMP) entity).interactionManager.setBlockReachDistance(Math.max(5, ((EntityPlayerMP) entity).interactionManager.getBlockReachDistance() + reach));
 	}
 
 	@Override

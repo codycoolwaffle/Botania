@@ -10,13 +10,7 @@
  */
 package vazkii.botania.common.item.equipment.armor.terrasteel;
 
-import java.util.List;
-import java.util.UUID;
-
-import javax.annotation.Nonnull;
-
 import com.google.common.collect.Multimap;
-
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -32,6 +26,10 @@ import vazkii.botania.client.model.armor.ModelArmorTerrasteel;
 import vazkii.botania.common.core.handler.ConfigHandler;
 import vazkii.botania.common.item.ModItems;
 import vazkii.botania.common.item.equipment.armor.manasteel.ItemManasteelArmor;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+import java.util.UUID;
 
 public class ItemTerrasteelArmor extends ItemManasteelArmor {
 
@@ -84,6 +82,9 @@ public class ItemTerrasteelArmor extends ItemManasteelArmor {
 
 	@Override
 	public boolean hasArmorSetItem(EntityPlayer player, int i) {
+		if(player == null || player.inventory == null || player.inventory.armorInventory == null)
+			return false;
+		
 		ItemStack stack = player.inventory.armorInventory.get(3 - i);
 		if(stack.isEmpty())
 			return false;

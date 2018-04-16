@@ -10,9 +10,6 @@
  */
 package vazkii.botania.common.block.tile.corporea;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -24,17 +21,10 @@ import vazkii.botania.api.corporea.ICorporeaSpark;
 import vazkii.botania.api.corporea.InvWithLocation;
 import vazkii.botania.api.state.BotaniaStateProps;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TileCorporeaInterceptor extends TileCorporeaBase implements ICorporeaInterceptor {
-
-	@Override
-	protected SimpleItemStackHandler createItemHandler() {
-		return new SimpleItemStackHandler(this, false);
-	}
-
-	@Override
-	public int getSizeInventory() {
-		return 1;
-	}
 
 	@Override
 	public void interceptRequest(Object request, int count, ICorporeaSpark spark, ICorporeaSpark source, List<ItemStack> stacks, List<InvWithLocation> inventories, boolean doit) {}

@@ -10,8 +10,6 @@
  */
 package vazkii.botania.common.item;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
@@ -22,6 +20,8 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.world.World;
 import vazkii.botania.common.entity.EntityVineBall;
 import vazkii.botania.common.lib.LibItemNames;
+
+import javax.annotation.Nonnull;
 
 public class ItemVineBall extends ItemMod {
 
@@ -39,7 +39,7 @@ public class ItemVineBall extends ItemMod {
 
 		if(!world.isRemote) {
 			EntityVineBall ball = new EntityVineBall(player, true);
-			ball.setHeadingFromThrower(player, player.rotationPitch, player.rotationYaw, 0.0F, 1.5F, 1.0F);
+			ball.shoot(player, player.rotationPitch, player.rotationYaw, 0.0F, 1.5F, 1.0F);
 			world.spawnEntity(ball);
 		}
 

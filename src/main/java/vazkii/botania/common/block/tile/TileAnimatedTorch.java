@@ -12,18 +12,22 @@ package vazkii.botania.common.block.tile;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import vazkii.botania.api.internal.VanillaPacketDispatcher;
 import vazkii.botania.common.block.ModBlocks;
 
-public class TileAnimatedTorch extends TileMod {
+import java.util.Arrays;
+
+public class TileAnimatedTorch extends TileMod implements ITickable {
 
 	public static final String TAG_SIDE = "side";
 	public static final String TAG_ROTATING = "rotating";
@@ -60,6 +64,13 @@ public class TileAnimatedTorch extends TileMod {
 	public void handRotate() {
 		if(!world.isRemote)
 			world.addBlockEvent(getPos(), ModBlocks.animatedTorch, 0, (side + 1) % 4);
+	}
+	
+	public void onPlace(EntityLivingBase entity) {
+		if(entity != null) {
+			side = Arrays.asList(SIDES).indexOf(entity.getHorizontalFacing().getOpposite());
+		}
+		world.notifyNeighborsOfStateChange(getPos().offset(SIDES[side].getOpposite()), getBlockType(), false);
 	}
 
 	public void toggle() {
@@ -103,7 +114,11 @@ public class TileAnimatedTorch extends TileMod {
 		this.side = side;
 		rotating = true;
 
+		// tell neighbors that signal is off because we are rotating
 		world.notifyNeighborsOfStateChange(getPos(), getBlockType(), false);
+		for(EnumFacing e : EnumFacing.VALUES) {
+			world.notifyNeighborsOfStateChange(getPos().offset(e), getBlockType(), false);
+		}
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -112,7 +127,7 @@ public class TileAnimatedTorch extends TileMod {
 		int y = res.getScaledHeight() / 2 - 8;
 
 		mc.getRenderItem().renderItemAndEffectIntoGUI(new ItemStack(Blocks.REDSTONE_TORCH), x, y);
-		mc.fontRendererObj.drawStringWithShadow(I18n.translateToLocal("botania.animatedTorch." + torchMode.name().toLowerCase()), x + 18, y + 6, 0xFF4444);
+		mc.fontRenderer.drawStringWithShadow(I18n.translateToLocal("botania.animatedTorch." + torchMode.name().toLowerCase()), x + 18, y + 6, 0xFF4444);
 	}
 
 	@Override
@@ -124,18 +139,24 @@ public class TileAnimatedTorch extends TileMod {
 
 			if(rotationTicks <= 0) {
 				rotating = false;
+				// done rotating, tell neighbors
 				world.notifyNeighborsOfStateChange(getPos(), getBlockType(), false);
+				for(EnumFacing e : EnumFacing.VALUES) {
+					world.notifyNeighborsOfStateChange(getPos().offset(e), getBlockType(), false);
+				}
 			}
 
 		} else rotation = side * 90;
 
-		int amt = rotating ? 3 : Math.random() < 0.1 ? 1 : 0;
-		double x = getPos().getX() + 0.5 + Math.cos((rotation + 90) / 180.0 * Math.PI) * 0.35;
-		double y = getPos().getY() + 0.2;
-		double z = getPos().getZ() + 0.5 + Math.sin((rotation + 90) / 180.0 * Math.PI) * 0.35;
+		if(world.isRemote) {
+			int amt = rotating ? 3 : Math.random() < 0.1 ? 1 : 0;
+			double x = getPos().getX() + 0.5 + Math.cos((rotation + 90) / 180.0 * Math.PI) * 0.35;
+			double y = getPos().getY() + 0.2;
+			double z = getPos().getZ() + 0.5 + Math.sin((rotation + 90) / 180.0 * Math.PI) * 0.35;
 
-		for(int i = 0; i < amt; i++)
-			world.spawnParticle(EnumParticleTypes.REDSTONE, x, y, z, 0.0D, 0.0D, 0.0D, new int[0]);
+			for(int i = 0; i < amt; i++)
+				world.spawnParticle(EnumParticleTypes.REDSTONE, x, y, z, 0.0D, 0.0D, 0.0D);
+		}
 	}
 
 	@Override
@@ -162,18 +183,18 @@ public class TileAnimatedTorch extends TileMod {
 		torchMode = modes[modeOrdinal % modes.length];
 	}
 
-	public static enum TorchMode {
+	public enum TorchMode {
 		TOGGLE((t, i) -> (i + 2) % 4),
 		ROTATE((t, i) -> (i + 1) % 4),
 		RANDOM((t, i) -> t.currentRandomRotation);
 
-		private TorchMode(RotationHandler modeSwitcher) {
+		TorchMode(RotationHandler modeSwitcher) {
 			this.modeSwitcher = modeSwitcher;
 		}
 
 		public final RotationHandler modeSwitcher;
 
-		private static interface RotationHandler {
+		private interface RotationHandler {
 			int rotate(TileAnimatedTorch tile, int curr);
 		}
 	}

@@ -10,25 +10,21 @@
  */
 package vazkii.botania.common.block.tile.mana;
 
-import java.util.EnumMap;
-import java.util.Map;
-
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
-import net.minecraftforge.fml.common.Optional;
 import vazkii.botania.api.mana.IManaReceiver;
-import vazkii.botania.common.Botania;
 import vazkii.botania.common.block.tile.TileMod;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class TileRFGenerator extends TileMod implements IManaReceiver {
+public class TileRFGenerator extends TileMod implements IManaReceiver, ITickable {
 
 	private static final int MANA_TO_FE = 10;
 	private static final int MAX_ENERGY = 1280 * MANA_TO_FE;
@@ -44,7 +40,7 @@ public class TileRFGenerator extends TileMod implements IManaReceiver {
 
 		@Override
 		public int getMaxEnergyStored() {
-			return Integer.MAX_VALUE;
+			return MAX_ENERGY;
 		}
 
 		// todo allow pulling?

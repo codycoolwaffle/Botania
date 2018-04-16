@@ -10,22 +10,12 @@
  */
 package vazkii.botania.common.block.tile.corporea;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.apache.commons.lang3.text.WordUtils;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ITickable;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -35,19 +25,33 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.commons.lang3.text.WordUtils;
 import vazkii.botania.api.corporea.CorporeaHelper;
 import vazkii.botania.api.corporea.ICorporeaAutoCompleteController;
 import vazkii.botania.api.corporea.ICorporeaRequestor;
 import vazkii.botania.api.corporea.ICorporeaSpark;
-import vazkii.botania.common.achievement.ModAchievements;
+import vazkii.botania.common.advancements.CorporeaRequestTrigger;
 import vazkii.botania.common.core.helper.MathHelper;
+import vazkii.botania.common.core.helper.PlayerHelper;
+import vazkii.botania.common.lib.LibMisc;
 
-public class TileCorporeaIndex extends TileCorporeaBase implements ICorporeaRequestor {
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+public class TileCorporeaIndex extends TileCorporeaBase implements ICorporeaRequestor, ITickable {
 
 	public static final double RADIUS = 2.5;
 
 	private static InputHandler input;
-	public static final Set<TileCorporeaIndex> indexes = Collections.newSetFromMap(new WeakHashMap<>());
+	private static final Set<TileCorporeaIndex> serverIndexes = Collections.newSetFromMap(new WeakHashMap<>());
+	private static final Set<TileCorporeaIndex> clientIndexes = Collections.newSetFromMap(new WeakHashMap<>());
 
 	private static final Map<Pattern, IRegexStacker> patterns = new LinkedHashMap<>();
 
@@ -171,25 +175,20 @@ public class TileCorporeaIndex extends TileCorporeaBase implements ICorporeaRequ
 		} else if(closeby > 0F)
 			closeby -= step;
 
-		if(!isInvalid() && !indexes.contains(this))
-			indexes.add(this);
+		if(!isInvalid())
+			addIndex(this);
 	}
 
 	@Override
 	public void invalidate() {
 		super.invalidate();
-		indexes.remove(this);
+		removeIndex(this);
 	}
 
 	@Override
 	public void onChunkUnload() {
 		super.onChunkUnload();
-		indexes.remove(this);
-	}
-
-	@Override
-	public int getSizeInventory() {
-		return 0;
+		removeIndex(this);
 	}
 
 	@Override
@@ -229,6 +228,16 @@ public class TileCorporeaIndex extends TileCorporeaBase implements ICorporeaRequ
 		return input;
 	}
 
+	private static void addIndex(TileCorporeaIndex index) {
+		Set<TileCorporeaIndex> set = index.world.isRemote ? clientIndexes : serverIndexes;
+		set.add(index);
+	}
+
+	private static void removeIndex(TileCorporeaIndex index) {
+		Set<TileCorporeaIndex> set = index.world.isRemote ? clientIndexes : serverIndexes;
+		set.remove(index);
+	}
+
 	public static final class InputHandler implements ICorporeaAutoCompleteController {
 
 		public InputHandler() {
@@ -241,9 +250,6 @@ public class TileCorporeaIndex extends TileCorporeaBase implements ICorporeaRequ
 			if(!nearbyIndexes.isEmpty()) {
 				String msg = event.getMessage().toLowerCase().trim();
 				for(TileCorporeaIndex index : nearbyIndexes) {
-					if(index.world.isRemote)
-						continue;
-
 					ICorporeaSpark spark = index.getSpark();
 					if(spark != null) {
 						String name = "";
@@ -267,8 +273,7 @@ public class TileCorporeaIndex extends TileCorporeaBase implements ICorporeaRequ
 						index.doCorporeaRequest(name, count, spark);
 
 						event.getPlayer().sendMessage(new TextComponentTranslation("botaniamisc.requestMsg", count, WordUtils.capitalizeFully(name), CorporeaHelper.lastRequestMatches, CorporeaHelper.lastRequestExtractions).setStyle(new Style().setColor(TextFormatting.LIGHT_PURPLE)));
-						if(CorporeaHelper.lastRequestExtractions >= 50000)
-							event.getPlayer().addStat(ModAchievements.superCorporeaRequest, 1);
+						CorporeaRequestTrigger.INSTANCE.trigger(event.getPlayer(), event.getPlayer().getServerWorld(), index.getPos(), CorporeaHelper.lastRequestExtractions);
 					}
 				}
 
@@ -277,11 +282,9 @@ public class TileCorporeaIndex extends TileCorporeaBase implements ICorporeaRequ
 		}
 
 		public static List<TileCorporeaIndex> getNearbyIndexes(EntityPlayer player) {
-			List<TileCorporeaIndex> indexList = new ArrayList<>();
-			for(TileCorporeaIndex index : indexes)
-				if(isInRangeOfIndex(player, index) && index.world.isRemote == player.world.isRemote)
-					indexList.add(index);
-			return indexList;
+			return (player.world.isRemote ? clientIndexes : serverIndexes)
+					.stream().filter(i -> isInRangeOfIndex(player, i))
+					.collect(Collectors.toList());
 		}
 
 		@Override

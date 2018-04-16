@@ -21,6 +21,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.StringUtils;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.relauncher.Side;
@@ -32,7 +33,7 @@ import vazkii.botania.common.item.ModItems;
 
 import javax.annotation.Nonnull;
 
-public class TileHourglass extends TileSimpleInventory {
+public class TileHourglass extends TileSimpleInventory implements ITickable {
 
 	private static final String TAG_TIME = "time";
 	private static final String TAG_TIME_FRACTION = "timeFraction";
@@ -48,13 +49,16 @@ public class TileHourglass extends TileSimpleInventory {
 	public int flipTicks = 0;
 	public boolean lock = false;
 	public boolean move = true;
-	public boolean dust = false;
+
+	private boolean isDust() {
+		ItemStack stack = itemHandler.getStackInSlot(0);
+		return !stack.isEmpty() && stack.getItem() == ModItems.manaResource && stack.getMetadata() == 23;
+	}
 
 	@Override
 	public void update() {
 		int totalTime = getTotalTime();
-		ItemStack dustStack = itemHandler.getStackInSlot(0);
-		dust = !dustStack.isEmpty() && dustStack.getItem() == ModItems.manaResource;
+		boolean dust = isDust();
 
 		if(totalTime > 0 || dust) {
 			if(move && !dust)
@@ -65,8 +69,7 @@ public class TileHourglass extends TileSimpleInventory {
 				flip = !flip;
 				flipTicks = 4;
 				if(!world.isRemote) {
-					world.setBlockState(getPos(), world.getBlockState(getPos()).withProperty(BotaniaStateProps.POWERED, true), 1 | 2);
-					VanillaPacketDispatcher.dispatchTEToNearbyPlayers(this);
+					world.setBlockState(getPos(), world.getBlockState(getPos()).withProperty(BotaniaStateProps.POWERED, true), 1);
 					world.scheduleUpdate(pos, getBlockType(), getBlockType().tickRate(world));
 				}
 
@@ -92,7 +95,7 @@ public class TileHourglass extends TileSimpleInventory {
 
 	public void onManaCollide() {
 		if(!world.isRemote) {
-			if(dust)
+			if(isDust())
 				time++;
 			else move = !move;
 			VanillaPacketDispatcher.dispatchTEToNearbyPlayers(this);
@@ -143,6 +146,16 @@ public class TileHourglass extends TileSimpleInventory {
 					return super.insertItem(slot, stack, simulate);
 				else return stack;
 			}
+
+			@Override
+			public void onContentsChanged(int slot) {
+				super.onContentsChanged(slot);
+				if(!TileHourglass.this.world.isRemote) {
+					time = 0;
+					timeFraction = 0F;
+					VanillaPacketDispatcher.dispatchTEToNearbyPlayers(TileHourglass.this);
+				}
+			}
 		};
 	}
 
@@ -173,14 +186,6 @@ public class TileHourglass extends TileSimpleInventory {
 		return 1;
 	}
 
-	@Override
-	public void markDirty() {
-		super.markDirty();
-		time = 0;
-		timeFraction = 0F;
-		VanillaPacketDispatcher.dispatchTEToNearbyPlayers(this);
-	}
-
 	@SideOnly(Side.CLIENT)
 	public void renderHUD(ScaledResolution res) {
 		Minecraft mc = Minecraft.getMinecraft();
@@ -192,13 +197,13 @@ public class TileHourglass extends TileSimpleInventory {
 			RenderHelper.enableGUIStandardItemLighting();
 			GlStateManager.enableRescaleNormal();
 			mc.getRenderItem().renderItemIntoGUI(stack, x, y);
-			mc.getRenderItem().renderItemOverlays(mc.fontRendererObj, stack, x, y);
+			mc.getRenderItem().renderItemOverlays(mc.fontRenderer, stack, x, y);
 			GlStateManager.disableRescaleNormal();
 			RenderHelper.disableStandardItemLighting();
 
 			int time = getTotalTime();
 			String timeStr = StringUtils.ticksToElapsedTime(time);
-			mc.fontRendererObj.drawStringWithShadow(timeStr, x + 20, y, getColor());
+			mc.fontRenderer.drawStringWithShadow(timeStr, x + 20, y, getColor());
 
 			String status = "";
 			if(lock)
@@ -206,7 +211,7 @@ public class TileHourglass extends TileSimpleInventory {
 			if(!move)
 				status = status.isEmpty() ? "stopped" : "lockedStopped";
 			if(!status.isEmpty())
-				mc.fontRendererObj.drawStringWithShadow(I18n.format("botaniamisc." + status), x + 20, y + 12, getColor());
+				mc.fontRenderer.drawStringWithShadow(I18n.format("botaniamisc." + status), x + 20, y + 12, getColor());
 		}
 
 	}

@@ -8,20 +8,17 @@
  */
 package vazkii.botania.client.integration.jei.brewery;
 
-import java.util.List;
-
-import javax.annotation.Nonnull;
-
 import com.google.common.collect.ImmutableList;
-
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.IRecipeWrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.oredict.OreDictionary;
 import vazkii.botania.api.recipe.RecipeBrew;
 import vazkii.botania.common.item.ModItems;
+
+import javax.annotation.Nonnull;
+import java.util.List;
 
 public class BreweryRecipeWrapper implements IRecipeWrapper {
 
@@ -50,21 +47,4 @@ public class BreweryRecipeWrapper implements IRecipeWrapper {
 		ingredients.setInputLists(ItemStack.class, input);
 		ingredients.setOutputLists(ItemStack.class, ImmutableList.of(output));
 	}
-
-	@Override
-	public void drawInfo(@Nonnull Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
-	}
-
-
-	@Nonnull
-	@Override
-	public List<String> getTooltipStrings(int mouseX, int mouseY) {
-		return ImmutableList.of();
-	}
-
-	@Override
-	public boolean handleClick(@Nonnull Minecraft minecraft, int mouseX, int mouseY, int mouseButton) {
-		return false;
-	}
-
 }

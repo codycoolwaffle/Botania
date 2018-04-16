@@ -10,18 +10,22 @@
  */
 package vazkii.botania.common.crafting.recipe;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
-import net.minecraftforge.common.ForgeHooks;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 import vazkii.botania.api.item.ICosmeticAttachable;
 import vazkii.botania.api.item.ICosmeticBauble;
 
-public class CosmeticAttachRecipe implements IRecipe {
+import javax.annotation.Nonnull;
+
+public class CosmeticAttachRecipe extends IForgeRegistryEntry.Impl<IRecipe> implements IRecipe {
+
+	@Override
+	public boolean isDynamic() {
+		return true;
+	}
 
 	@Override
 	public boolean matches(@Nonnull InventoryCrafting var1, @Nonnull World var2) {
@@ -72,19 +76,13 @@ public class CosmeticAttachRecipe implements IRecipe {
 	}
 
 	@Override
-	public int getRecipeSize() {
-		return 10;
+	public boolean canFit(int width, int height) {
+		return width * height >= 2;
 	}
 
 	@Nonnull
 	@Override
 	public ItemStack getRecipeOutput() {
 		return ItemStack.EMPTY;
-	}
-
-	@Nonnull
-	@Override
-	public NonNullList<ItemStack> getRemainingItems(@Nonnull InventoryCrafting inv) {
-		return ForgeHooks.defaultRecipeGetRemainingItems(inv);
 	}
 }

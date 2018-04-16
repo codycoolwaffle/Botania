@@ -14,26 +14,20 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.Optional;
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.oredict.RecipeSorter;
-import net.minecraftforge.oredict.RecipeSorter.Category;
 import thaumcraft.api.items.IGoggles;
 import thaumcraft.api.items.IRevealer;
 import vazkii.botania.client.lib.LibResources;
 import vazkii.botania.common.core.handler.ConfigHandler;
-import vazkii.botania.common.crafting.recipe.HelmRevealingRecipe;
 import vazkii.botania.common.item.equipment.armor.manasteel.ItemManasteelHelm;
 import vazkii.botania.common.lib.LibItemNames;
 
 @Optional.InterfaceList({
-	@Optional.Interface(modid = "Thaumcraft", iface = "thaumcraft.api.items.IGoggles", striprefs = true),
-	@Optional.Interface(modid = "Thaumcraft", iface = "thaumcraft.api.items.IRevealer", striprefs = true)})
+	@Optional.Interface(modid = "thaumcraft", iface = "thaumcraft.api.items.IGoggles", striprefs = true),
+	@Optional.Interface(modid = "thaumcraft", iface = "thaumcraft.api.items.IRevealer", striprefs = true)})
 public class ItemManasteelHelmRevealing extends ItemManasteelHelm implements IGoggles, IRevealer {
 
 	public ItemManasteelHelmRevealing() {
 		super(LibItemNames.MANASTEEL_HELM_R);
-		GameRegistry.addRecipe(new HelmRevealingRecipe()); //Manasteel is the base so it gets the recipe added in its constructor so that ModItems can call it
-		RecipeSorter.register("botania:helmRevealing", HelmRevealingRecipe.class, Category.SHAPELESS, "");
 	}
 
 	@Override

@@ -10,17 +10,16 @@
  */
 package vazkii.botania.api.lexicon;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.annotation.Nonnull;
-
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import vazkii.botania.api.BotaniaAPI;
+
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class LexiconEntry implements Comparable<LexiconEntry> {
 
@@ -84,7 +83,7 @@ public class LexiconEntry implements Comparable<LexiconEntry> {
 	}
 
 	public String getTagline() {
-		return null; // Override this if you want a tagline. You probably do
+		return ""; // Override this if you want a tagline. You probably do
 	}
 
 	@SideOnly(Side.CLIENT)

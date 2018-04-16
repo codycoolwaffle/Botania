@@ -10,8 +10,6 @@
  */
 package vazkii.botania.common.block.subtile.generating;
 
-import java.util.List;
-
 import net.minecraft.entity.monster.EntitySlime;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.util.EnumParticleTypes;
@@ -21,13 +19,18 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.Event.Result;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import vazkii.botania.api.lexicon.LexiconEntry;
 import vazkii.botania.api.subtile.RadiusDescriptor;
 import vazkii.botania.api.subtile.SubTileGenerating;
 import vazkii.botania.common.lexicon.LexiconData;
+import vazkii.botania.common.lib.LibMisc;
 
+import java.util.List;
+
+@Mod.EventBusSubscriber(modid = LibMisc.MOD_ID)
 public class SubTileNarslimmus extends SubTileGenerating {
 
 	public static final String TAG_WORLD_SPAWNED = "Botania:WorldSpawned";
@@ -44,7 +47,7 @@ public class SubTileNarslimmus extends SubTileGenerating {
 				if(slime.getEntityData().getBoolean(TAG_WORLD_SPAWNED) && !slime.isDead) {
 					int size = slime.getSlimeSize();
 					int mul = (int) Math.pow(2, size);
-					int mana = 820 * mul;
+					int mana = 1200 * mul;
 					if(!slime.world.isRemote) {
 						slime.setDead();
 						slime.playSound(size > 1 ? SoundEvents.ENTITY_SLIME_SQUISH : SoundEvents.ENTITY_SMALL_SLIME_SQUISH, 1, 0.02F);
@@ -73,7 +76,7 @@ public class SubTileNarslimmus extends SubTileGenerating {
 
 	@Override
 	public int getMaxMana() {
-		return 8000;
+		return 12000;
 	}
 
 	@Override
@@ -86,19 +89,15 @@ public class SubTileNarslimmus extends SubTileGenerating {
 		return LexiconData.narslimmus;
 	}
 
-	public static class SpawnIntercepter {
+	@SubscribeEvent
+	public static void onSpawn(LivingSpawnEvent.CheckSpawn event) {
+		if(event.getEntityLiving() instanceof EntitySlime && event.getResult() != Result.DENY && isSlimeChunk(event.getEntityLiving().world, MathHelper.floor(event.getX()), MathHelper.floor(event.getZ())))
+			event.getEntityLiving().getEntityData().setBoolean(TAG_WORLD_SPAWNED, true);
+	}
 
-		@SubscribeEvent
-		public static void onSpawn(LivingSpawnEvent.CheckSpawn event) {
-			if(event.getEntityLiving() instanceof EntitySlime && event.getResult() != Result.DENY && isSlimeChunk(event.getEntityLiving().world, MathHelper.floor(event.getX()), MathHelper.floor(event.getZ())))
-				event.getEntityLiving().getEntityData().setBoolean(TAG_WORLD_SPAWNED, true);
-		}
-
-		public static boolean isSlimeChunk(World world, int x, int z) {
-			Chunk chunk = world.getChunkFromBlockCoords(new BlockPos(x, 0, z));
-			return chunk.getRandomWithSeed(987234911L).nextInt(10) == 0;
-		}
-
+	public static boolean isSlimeChunk(World world, int x, int z) {
+		Chunk chunk = world.getChunkFromBlockCoords(new BlockPos(x, 0, z));
+		return chunk.getRandomWithSeed(987234911L).nextInt(10) == 0;
 	}
 
 }

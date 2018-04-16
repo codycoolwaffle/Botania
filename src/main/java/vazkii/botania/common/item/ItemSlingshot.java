@@ -10,10 +10,6 @@
  */
 package vazkii.botania.common.item;
 
-import java.util.function.Predicate;
-
-import javax.annotation.Nonnull;
-
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
@@ -27,6 +23,9 @@ import net.minecraft.world.World;
 import vazkii.botania.common.core.helper.PlayerHelper;
 import vazkii.botania.common.entity.EntityVineBall;
 import vazkii.botania.common.lib.LibItemNames;
+
+import javax.annotation.Nonnull;
+import java.util.function.Predicate;
 
 public class ItemSlingshot extends ItemMod {
 
@@ -52,7 +51,7 @@ public class ItemSlingshot extends ItemMod {
 				PlayerHelper.consumeAmmo((EntityPlayer) living, AMMO_FUNC);
 
 			EntityVineBall ball = new EntityVineBall(living, false);
-			ball.setHeadingFromThrower(living, living.rotationPitch, living.rotationYaw, 0F, 1.5F, 1F);
+			ball.shoot(living, living.rotationPitch, living.rotationYaw, 0F, 1.5F, 1F);
 			ball.motionX *= 1.6;
 			ball.motionY *= 1.6;
 			ball.motionZ *= 1.6;

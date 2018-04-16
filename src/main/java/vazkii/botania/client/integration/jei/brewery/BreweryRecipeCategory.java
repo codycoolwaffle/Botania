@@ -8,13 +8,6 @@
  */
 package vazkii.botania.client.integration.jei.brewery;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import mezz.jei.api.IGuiHelper;
 import mezz.jei.api.gui.IDrawable;
 import mezz.jei.api.gui.IDrawableStatic;
@@ -26,6 +19,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import vazkii.botania.common.lib.LibMisc;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BreweryRecipeCategory implements IRecipeCategory {
 
@@ -53,18 +52,14 @@ public class BreweryRecipeCategory implements IRecipeCategory {
 
 	@Nonnull
 	@Override
+	public String getModName() {
+		return LibMisc.MOD_NAME;
+	}
+
+	@Nonnull
+	@Override
 	public IDrawable getBackground() {
 		return background;
-	}
-
-	@Nullable
-	@Override
-	public IDrawable getIcon() {
-		return null;
-	}
-
-	@Override
-	public void drawExtras(@Nonnull Minecraft minecraft) {
 	}
 
 	@Override
@@ -89,10 +84,4 @@ public class BreweryRecipeCategory implements IRecipeCategory {
 		recipeLayout.getItemStacks().init(7, false, 87, 41);
 		recipeLayout.getItemStacks().set(7, ingredients.getOutputs(ItemStack.class).get(0));
 	}
-	
-	@Override
-	public List getTooltipStrings(int mouseX, int mouseY) {
-		return new ArrayList();
-	}
-
 }

@@ -10,8 +10,6 @@
  */
 package vazkii.botania.common.block.tile.mana;
 
-import org.lwjgl.opengl.GL11;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
@@ -20,11 +18,13 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.text.TextFormatting;
+import org.lwjgl.opengl.GL11;
 import vazkii.botania.api.internal.VanillaPacketDispatcher;
 import vazkii.botania.common.block.tile.TileMod;
 
-public class TileTurntable extends TileMod {
+public class TileTurntable extends TileMod implements ITickable {
 
 	private static final String TAG_SPEED = "speed";
 	private static final String TAG_BACKWARDS = "backwards";
@@ -85,11 +85,11 @@ public class TileTurntable extends TileMod {
 		for(int i = 0; i < this.speed; i++)
 			speed = speed + motion;
 
-		int x = res.getScaledWidth() / 2 - mc.fontRendererObj.getStringWidth(speed) / 2;
+		int x = res.getScaledWidth() / 2 - mc.fontRenderer.getStringWidth(speed) / 2;
 		int y = res.getScaledHeight() / 2 - 15;
 		GlStateManager.enableBlend();
 		GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		mc.fontRendererObj.drawStringWithShadow(speed, x, y, color);
+		mc.fontRenderer.drawStringWithShadow(speed, x, y, color);
 		GlStateManager.disableBlend();
 	}
 

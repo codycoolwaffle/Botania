@@ -10,25 +10,28 @@
  */
 package vazkii.botania.common.crafting.recipe;
 
-import java.util.Arrays;
-import java.util.List;
-
-import javax.annotation.Nonnull;
-
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
-import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.oredict.OreDictionary;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 import vazkii.botania.api.mana.ILens;
 import vazkii.botania.common.item.lens.ItemLens;
 import vazkii.botania.common.lib.LibOreDict;
 
-public class LensDyeingRecipe implements IRecipe {
+import javax.annotation.Nonnull;
+import java.util.Arrays;
+import java.util.List;
+
+public class LensDyeingRecipe extends IForgeRegistryEntry.Impl<IRecipe> implements IRecipe {
 
 	private static final List<String> DYES = Arrays.asList("dyeWhite", "dyeOrange", "dyeMagenta", "dyeLightBlue", "dyeYellow", "dyeLime", "dyePink", "dyeGray", "dyeLightGray", "dyeCyan", "dyePurple", "dyeBlue", "dyeBrown", "dyeGreen", "dyeRed", "dyeBlack", LibOreDict.MANA_PEARL);
+
+	@Override
+	public boolean isDynamic() {
+		return true;
+	}
 
 	@Override
 	public boolean matches(@Nonnull InventoryCrafting var1, @Nonnull World var2) {
@@ -80,8 +83,8 @@ public class LensDyeingRecipe implements IRecipe {
 	}
 
 	@Override
-	public int getRecipeSize() {
-		return 10;
+	public boolean canFit(int width, int height) {
+		return width * height >= 2;
 	}
 
 	@Nonnull
@@ -99,11 +102,5 @@ public class LensDyeingRecipe implements IRecipe {
 		}
 
 		return -1;
-	}
-
-	@Nonnull
-	@Override
-	public NonNullList<ItemStack> getRemainingItems(@Nonnull InventoryCrafting inv) {
-		return ForgeHooks.defaultRecipeGetRemainingItems(inv);
 	}
 }

@@ -10,18 +10,17 @@
  */
 package vazkii.botania.common.block.tile;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public class TileMod extends TileEntity implements ITickable {
+import javax.annotation.Nonnull;
+
+public class TileMod extends TileEntity {
 
 	@Override
 	public boolean shouldRefresh(World world, BlockPos pos, @Nonnull IBlockState oldState, @Nonnull IBlockState newState) {
@@ -64,8 +63,5 @@ public class TileMod extends TileEntity implements ITickable {
 		super.onDataPacket(net, packet);
 		readPacketNBT(packet.getNbtCompound());
 	}
-
-	@Override
-	public void update() {}
 
 }

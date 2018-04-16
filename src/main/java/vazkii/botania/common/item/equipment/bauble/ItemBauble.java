@@ -10,43 +10,47 @@
  */
 package vazkii.botania.common.item.equipment.bauble;
 
-import java.util.List;
-import java.util.UUID;
-
-import javax.annotation.Nonnull;
-
-import baubles.api.BaubleType;
 import baubles.api.BaublesApi;
 import baubles.api.IBauble;
 import baubles.api.cap.IBaublesItemHandler;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.IInventory;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.world.World;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Optional;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemHandlerHelper;
 import thaumcraft.api.items.IRunicArmor;
 import vazkii.botania.api.item.ICosmeticAttachable;
 import vazkii.botania.api.item.IPhantomInkable;
-import vazkii.botania.api.sound.BotaniaSoundEvents;
-import vazkii.botania.common.achievement.ModAchievements;
+import vazkii.botania.common.core.handler.ModSounds;
 import vazkii.botania.common.core.helper.ItemNBTHelper;
+import vazkii.botania.common.core.helper.PlayerHelper;
 import vazkii.botania.common.entity.EntityDoppleganger;
 import vazkii.botania.common.item.ItemMod;
+import vazkii.botania.common.lib.LibMisc;
 
-@Optional.Interface(modid = "Thaumcraft", iface = "thaumcraft.api.items.IRunicArmor")
+import javax.annotation.Nonnull;
+import java.util.List;
+import java.util.UUID;
+
+@Optional.Interface(modid = "thaumcraft", iface = "thaumcraft.api.items.IRunicArmor")
+@Mod.EventBusSubscriber(modid = LibMisc.MOD_ID)
 public abstract class ItemBauble extends ItemMod implements IBauble, ICosmeticAttachable, IPhantomInkable, IRunicArmor {
 
 	private static final String TAG_HASHCODE = "playerHashcode";
@@ -58,6 +62,26 @@ public abstract class ItemBauble extends ItemMod implements IBauble, ICosmeticAt
 	public ItemBauble(String name) {
 		super(name);
 		setMaxStackSize(1);
+	}
+
+	// Apparently baubles doesn't unequip on death, which causes attribute modifiers to get weird/desync on respawn
+	// See Baubles#236
+	// Do it for our baubles if they're going to drop
+	// TODO there is still some weirdness going on when dying/returning in the End, figure that out
+	@SubscribeEvent
+	public static void onDeath(LivingDeathEvent evt) {
+		if(!evt.getEntityLiving().world.isRemote
+				&& evt.getEntityLiving() instanceof EntityPlayer
+				&& !evt.getEntityLiving().world.getGameRules().getBoolean("keepInventory")
+				&& !((EntityPlayer) evt.getEntityLiving()).isSpectator()) {
+			IItemHandler inv = BaublesApi.getBaublesHandler((EntityPlayer) evt.getEntityLiving());
+			for(int i = 0; i < inv.getSlots(); i++) {
+				ItemStack stack = inv.getStackInSlot(i);
+				if (!stack.isEmpty() && stack.getItem().getRegistryName().getResourceDomain().equals(LibMisc.MOD_ID)) {
+					((ItemBauble) stack.getItem()).onUnequipped(stack, evt.getEntityLiving());
+				}
+			}
+		}
 	}
 
 	@Nonnull
@@ -79,8 +103,16 @@ public abstract class ItemBauble extends ItemMod implements IBauble, ICosmeticAt
 				if(baubles.isItemValidForSlot(i, toEquip, player)) {
 					ItemStack stackInSlot = baubles.getStackInSlot(i);
 					if(stackInSlot.isEmpty() || ((IBauble) stackInSlot.getItem()).canUnequip(stackInSlot, player)) {
+						// If toEquip and stackInSlot are stacks with equal value but not identity, ItemStackHandler.setStackInSlot actually does nothing >.>
+						// Prevent it from trying to be overly smart by going through empty first
+						baubles.setStackInSlot(i, ItemStack.EMPTY);
+
 						baubles.setStackInSlot(i, toEquip);
+						((IBauble) toEquip.getItem()).onEquipped(toEquip, player);
+
 						stack.shrink(1);
+
+						PlayerHelper.grantCriterion((EntityPlayerMP) player, new ResourceLocation(LibMisc.MOD_ID, "main/bauble_wear"), "code_triggered");
 
 						if(!stackInSlot.isEmpty()) {
 							((IBauble) stackInSlot.getItem()).onUnequipped(stackInSlot, player);
@@ -103,14 +135,14 @@ public abstract class ItemBauble extends ItemMod implements IBauble, ICosmeticAt
 
 	@Override
 	@SideOnly(Side.CLIENT)
-	public void addInformation(ItemStack par1ItemStack, EntityPlayer player, List<String> stacks, boolean par4) {
+	public void addInformation(ItemStack par1ItemStack, World world, List<String> stacks, ITooltipFlag flags) {
 		if(GuiScreen.isShiftKeyDown())
-			addHiddenTooltip(par1ItemStack, player, stacks, par4);
+			addHiddenTooltip(par1ItemStack, world, stacks, flags);
 		else addStringToTooltip(I18n.format("botaniamisc.shiftinfo"), stacks);
 	}
 
 	@SideOnly(Side.CLIENT)
-	public void addHiddenTooltip(ItemStack par1ItemStack, EntityPlayer player, List<String> stacks, boolean par4) {
+	public void addHiddenTooltip(ItemStack par1ItemStack, World world, List<String> stacks, ITooltipFlag flags) {
 		String key = vazkii.botania.client.core.helper.RenderHelper.getKeyDisplayString("Baubles Inventory");
 
 		if(key != null)
@@ -149,11 +181,10 @@ public abstract class ItemBauble extends ItemMod implements IBauble, ICosmeticAt
 	@Override
 	public void onEquipped(ItemStack stack, EntityLivingBase player) {
 		if(player != null) {
-			if(!player.world.isRemote)
-				player.world.playSound(null, player.posX, player.posY, player.posZ, BotaniaSoundEvents.equipBauble, SoundCategory.PLAYERS, 0.1F, 1.3F);
-
-			if(player instanceof EntityPlayer)
-				((EntityPlayer) player).addStat(ModAchievements.baubleWear, 1);
+			if(!player.world.isRemote) {
+				player.world.playSound(null, player.posX, player.posY, player.posZ, ModSounds.equipBauble, SoundCategory.PLAYERS, 0.1F, 1.3F);
+				PlayerHelper.grantCriterion((EntityPlayerMP) player, new ResourceLocation(LibMisc.MOD_ID, "main/bauble_wear"), "code_triggered");
+			}
 
 			onEquippedOrLoadedIntoWorld(stack, player);
 			setLastPlayerHashcode(stack, player.hashCode());

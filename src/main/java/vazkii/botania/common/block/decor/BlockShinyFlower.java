@@ -10,8 +10,6 @@
  */
 package vazkii.botania.common.block.decor;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.statemap.StateMap;
 import net.minecraft.entity.player.EntityPlayer;
@@ -32,7 +30,9 @@ import vazkii.botania.common.core.handler.ConfigHandler;
 import vazkii.botania.common.lexicon.LexiconData;
 import vazkii.botania.common.lib.LibBlockNames;
 
-@Optional.Interface(modid = "Thaumcraft", iface = "thaumcraft.api.crafting.IInfusionStabiliser", striprefs = true)
+import javax.annotation.Nonnull;
+
+@Optional.Interface(modid = "thaumcraft", iface = "thaumcraft.api.crafting.IInfusionStabiliser", striprefs = true)
 public class BlockShinyFlower extends BlockModFlower implements IInfusionStabiliser, IHornHarvestable {
 
 	public BlockShinyFlower() {

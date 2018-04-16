@@ -10,13 +10,11 @@
  */
 package vazkii.botania.common.block.tile.mana;
 
-import javax.annotation.Nonnull;
-
 import com.google.common.collect.ImmutableMap;
-
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.animation.TimeValues;
@@ -28,7 +26,9 @@ import net.minecraftforge.fml.relauncher.Side;
 import vazkii.botania.api.internal.VanillaPacketDispatcher;
 import vazkii.botania.common.block.tile.TileMod;
 
-public class TilePump extends TileMod {
+import javax.annotation.Nonnull;
+
+public class TilePump extends TileMod implements ITickable {
 
 	private static final String TAG_ACTIVE = "active";
 

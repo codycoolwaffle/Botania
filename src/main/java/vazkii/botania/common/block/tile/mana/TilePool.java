@@ -10,16 +10,7 @@
  */
 package vazkii.botania.common.block.tile.mana;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.Nonnull;
-
-import org.lwjgl.opengl.GL11;
-
 import com.google.common.base.Predicates;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -36,12 +27,14 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.opengl.GL11;
 import vazkii.botania.api.BotaniaAPI;
 import vazkii.botania.api.internal.VanillaPacketDispatcher;
 import vazkii.botania.api.item.IManaDissolvable;
@@ -53,7 +46,6 @@ import vazkii.botania.api.mana.ManaNetworkEvent;
 import vazkii.botania.api.mana.spark.ISparkAttachable;
 import vazkii.botania.api.mana.spark.ISparkEntity;
 import vazkii.botania.api.recipe.RecipeManaInfusion;
-import vazkii.botania.api.sound.BotaniaSoundEvents;
 import vazkii.botania.api.state.BotaniaStateProps;
 import vazkii.botania.api.state.enums.PoolVariant;
 import vazkii.botania.client.core.handler.HUDHandler;
@@ -64,13 +56,19 @@ import vazkii.botania.common.block.ModBlocks;
 import vazkii.botania.common.block.tile.TileMod;
 import vazkii.botania.common.core.handler.ConfigHandler;
 import vazkii.botania.common.core.handler.ManaNetworkHandler;
-import vazkii.botania.common.core.handler.MethodHandles;
+import vazkii.botania.common.core.handler.ModSounds;
+import vazkii.botania.common.core.helper.Vector3;
 import vazkii.botania.common.item.ItemManaTablet;
 import vazkii.botania.common.item.ModItems;
 import vazkii.botania.common.network.PacketBotaniaEffect;
 import vazkii.botania.common.network.PacketHandler;
 
-public class TilePool extends TileMod implements IManaPool, IKeyLocked, ISparkAttachable, IThrottledPacket {
+import javax.annotation.Nonnull;
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
+
+public class TilePool extends TileMod implements IManaPool, IKeyLocked, ISparkAttachable, IThrottledPacket, ITickable {
 
 	public static final Color PARTICLE_COLOR = new Color(0x00C6FF);
 	public static final int MAX_MANA = 1000000;
@@ -86,6 +84,8 @@ public class TilePool extends TileMod implements IManaPool, IKeyLocked, ISparkAt
 	private static final String TAG_FRAGILE = "fragile";
 	private static final String TAG_INPUT_KEY = "inputKey";
 	private static final String TAG_OUTPUT_KEY = "outputKey";
+	private static final int CRAFT_EFFECT_EVENT = 0;
+	private static final int CHARGE_EFFECT_EVENT = 1;
 
 	private boolean outputting = false;
 
@@ -124,9 +124,12 @@ public class TilePool extends TileMod implements IManaPool, IKeyLocked, ISparkAt
 
 	@Override
 	public void recieveMana(int mana) {
+		int old = this.mana;
 		this.mana = Math.max(0, Math.min(getCurrentMana() + mana, manaCap));
-		world.updateComparatorOutputLevel(pos, world.getBlockState(pos).getBlock());
-		markDispatchable();
+		if(old != this.mana) {
+			world.updateComparatorOutputLevel(pos, world.getBlockState(pos).getBlock());
+			markDispatchable();
+		}
 	}
 
 	@Override
@@ -138,7 +141,14 @@ public class TilePool extends TileMod implements IManaPool, IKeyLocked, ISparkAt
 	@Override
 	public void onChunkUnload() {
 		super.onChunkUnload();
-		invalidate();
+		ManaNetworkEvent.removePool(this);
+	}
+
+	public static int calculateComparatorLevel(int mana, int max) {
+		int val = (int) ((double) mana / (double) max * 15.0);
+		if(mana > 0)
+			val = Math.max(val, 1);
+		return val;
 	}
 
 	public static RecipeManaInfusion getMatchingRecipe(@Nonnull ItemStack stack, @Nonnull IBlockState state) {
@@ -161,21 +171,16 @@ public class TilePool extends TileMod implements IManaPool, IKeyLocked, ISparkAt
 	}
 
 	public boolean collideEntityItem(EntityItem item) {
-		if(world.isRemote || item.isDead)
+		if(world.isRemote || item.isDead || item.getItem().isEmpty())
 			return false;
 
-		ItemStack stack = item.getEntityItem();
+		ItemStack stack = item.getItem();
 
 		if(stack.getItem() instanceof IManaDissolvable) {
 			((IManaDissolvable) stack.getItem()).onDissolveTick(this, stack, item);
 		}
 
-		int age;
-		try {
-			age = (int) MethodHandles.itemAge_getter.invokeExact(item);
-		} catch (Throwable throwable) { return false; }
-
-		if(age > 100 && age < 130)
+		if(item.age > 100 && item.age < 130)
 			return false;
 
 		RecipeManaInfusion recipe = getMatchingRecipe(stack, world.getBlockState(pos.down()));
@@ -189,9 +194,7 @@ public class TilePool extends TileMod implements IManaPool, IKeyLocked, ISparkAt
 
 				ItemStack output = recipe.getOutput().copy();
 				EntityItem outputItem = new EntityItem(world, pos.getX() + 0.5, pos.getY() + 1.5, pos.getZ() + 0.5, output);
-				try {
-					MethodHandles.itemAge_setter.invokeExact(outputItem, 105);
-				} catch (Throwable ignored) {}
+				outputItem.age = 105;
 				world.spawnEntity(outputItem);
 
 				craftingFanciness();
@@ -204,12 +207,43 @@ public class TilePool extends TileMod implements IManaPool, IKeyLocked, ISparkAt
 
 	private void craftingFanciness() {
 		if(soundTicks == 0) {
-			world.playSound(null, pos, BotaniaSoundEvents.manaPoolCraft, SoundCategory.BLOCKS, 0.4F, 4F);
+			world.playSound(null, pos, ModSounds.manaPoolCraft, SoundCategory.BLOCKS, 0.4F, 4F);
 			soundTicks = 6;
 		}
 
-		PacketHandler.sendToNearby(world, getPos(),
-				new PacketBotaniaEffect(PacketBotaniaEffect.EffectType.POOL_CRAFT, pos.getX(), pos.getY(), pos.getZ()));
+		world.addBlockEvent(getPos(), getBlockType(), CRAFT_EFFECT_EVENT, 0);
+	}
+
+	@Override
+	public boolean receiveClientEvent(int event, int param) {
+		switch(event) {
+			case CRAFT_EFFECT_EVENT: {
+				if(world.isRemote) {
+					for(int i = 0; i < 25; i++) {
+						float red = (float) Math.random();
+						float green = (float) Math.random();
+						float blue = (float) Math.random();
+						Botania.proxy.sparkleFX(pos.getX() + 0.5 + Math.random() * 0.4 - 0.2, pos.getY() + 0.75, pos.getZ() + 0.5 + Math.random() * 0.4 - 0.2,
+									red, green, blue, (float) Math.random(), 10);
+					}
+				}
+
+				return true;
+			}
+			case CHARGE_EFFECT_EVENT: {
+				if(world.isRemote) {
+					if(ConfigHandler.chargingAnimationEnabled) {
+						boolean outputting = param == 1;
+						Vector3 itemVec = Vector3.fromBlockPos(pos).add(0.5, 0.5 + Math.random() * 0.3, 0.5);
+						Vector3 tileVec = Vector3.fromBlockPos(pos).add(0.2 + Math.random() * 0.6, 0, 0.2 + Math.random() * 0.6);
+						Botania.proxy.lightningFX(outputting ? tileVec : itemVec,
+								outputting ? itemVec : tileVec, 80, world.rand.nextLong(), 0x4400799c, 0x4400C6FF);
+					}
+				}
+				return true;
+			}
+			default: return super.receiveClientEvent(event, param);
+		}
 	}
 
 	@Override
@@ -244,7 +278,7 @@ public class TilePool extends TileMod implements IManaPool, IKeyLocked, ISparkAt
 			if(item.isDead)
 				continue;
 
-			ItemStack stack = item.getEntityItem();
+			ItemStack stack = item.getItem();
 			if(!stack.isEmpty() && stack.getItem() instanceof IManaItem) {
 				IManaItem mana = (IManaItem) stack.getItem();
 				if(outputting && mana.canReceiveManaFromPool(stack, this) || !outputting && mana.canExportManaToPool(stack, this)) {
@@ -281,8 +315,7 @@ public class TilePool extends TileMod implements IManaPool, IKeyLocked, ISparkAt
 
 					if(didSomething) {
 						if(ConfigHandler.chargingAnimationEnabled && world.rand.nextInt(20) == 0) {
-							PacketHandler.sendToNearby(world, getPos(),
-									new PacketBotaniaEffect(PacketBotaniaEffect.EffectType.POOL_CHARGE, getPos().getX(), getPos().getY(), getPos().getZ(), outputting ? 1 : 0));
+							world.addBlockEvent(getPos(), getBlockType(), CHARGE_EFFECT_EVENT, outputting ? 1 : 0);
 						}
 						isDoingTransfer = outputting;
 					}
@@ -356,7 +389,7 @@ public class TilePool extends TileMod implements IManaPool, IKeyLocked, ISparkAt
 				((EntityPlayerMP) player).connection.sendPacket(new SPacketUpdateTileEntity(pos, -999, nbttagcompound));
 		}
 
-		world.playSound(null, player.posX, player.posY, player.posZ, BotaniaSoundEvents.ding, SoundCategory.PLAYERS, 0.11F, 1F);
+		world.playSound(null, player.posX, player.posY, player.posZ, ModSounds.ding, SoundCategory.PLAYERS, 0.11F, 1F);
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -448,7 +481,12 @@ public class TilePool extends TileMod implements IManaPool, IKeyLocked, ISparkAt
 
 	@Override
 	public int getAvailableSpaceForMana() {
-		return Math.max(0, manaCap - getCurrentMana());
+		int space = Math.max(0, manaCap - getCurrentMana());
+		if(space > 0)
+			return space;
+		else if(world.getBlockState(pos.down()).getBlock() == ModBlocks.manaVoid)
+			return manaCap;
+		else return 0;
 	}
 
 	@Override

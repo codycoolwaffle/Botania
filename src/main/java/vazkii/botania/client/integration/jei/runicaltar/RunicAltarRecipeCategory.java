@@ -8,14 +8,6 @@
  */
 package vazkii.botania.client.integration.jei.runicaltar;
 
-import java.awt.Point;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import mezz.jei.api.IGuiHelper;
 import mezz.jei.api.gui.IDrawable;
 import mezz.jei.api.gui.IRecipeLayout;
@@ -28,6 +20,13 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import vazkii.botania.common.block.ModBlocks;
+import vazkii.botania.common.lib.LibMisc;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.awt.Point;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RunicAltarRecipeCategory implements IRecipeCategory {
 
@@ -59,12 +58,6 @@ public class RunicAltarRecipeCategory implements IRecipeCategory {
 	@Override
 	public IDrawable getBackground() {
 		return background;
-	}
-
-	@Nullable
-	@Override
-	public IDrawable getIcon() {
-		return null;
 	}
 
 	@Override
@@ -108,9 +101,10 @@ public class RunicAltarRecipeCategory implements IRecipeCategory {
 		return new Point((int) newX, (int) newY);
 	}
 
+	@Nonnull
 	@Override
-	public List getTooltipStrings(int mouseX, int mouseY) {
-		return new ArrayList();
+	public String getModName() {
+		return LibMisc.MOD_NAME;
 	}
 	
 }

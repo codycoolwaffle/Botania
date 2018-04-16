@@ -11,9 +11,11 @@
 package vazkii.botania.common.block;
 
 import net.minecraft.block.material.Material;
+import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -57,6 +59,11 @@ public class BlockAnimatedTorch extends BlockMod implements IWandable, IManaTrig
 		}
 
 		return false;
+	}
+	
+	@Override
+	public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase entity, ItemStack stack) {
+		((TileAnimatedTorch) world.getTileEntity(pos)).onPlace(entity);
 	}
 
 	@Override
@@ -135,6 +142,21 @@ public class BlockAnimatedTorch extends BlockMod implements IWandable, IManaTrig
 	@Override
 	public boolean hasTileEntity(IBlockState state) {
 		return true;
+	}
+
+	@Nonnull
+	@Override
+	public BlockFaceShape getBlockFaceShape(IBlockAccess world, IBlockState state, BlockPos pos, EnumFacing side) {
+		return BlockFaceShape.UNDEFINED;
+	}
+
+	@Override
+	public void onBlockDestroyedByPlayer(World world, BlockPos pos, IBlockState state) {
+		// TE is already gone so best we can do is just notify everyone
+		for(EnumFacing side : EnumFacing.VALUES) {
+			world.notifyNeighborsOfStateChange(pos.offset(side), this, false);
+		}
+		super.onBlockDestroyedByPlayer(world, pos, state);
 	}
 
 	@Override

@@ -10,21 +10,22 @@
  */
 package vazkii.botania.common.block.tile;
 
-import java.util.List;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.WorldServer;
 import vazkii.botania.api.state.BotaniaStateProps;
 import vazkii.botania.common.item.equipment.tool.ToolCommons;
 
-public class TileEnderEye extends TileMod {
+import java.util.List;
+
+public class TileEnderEye extends TileMod implements ITickable {
 
 	@Override
 	public void update() {

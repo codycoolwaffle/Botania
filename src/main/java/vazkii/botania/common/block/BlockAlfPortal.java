@@ -10,28 +10,33 @@
  */
 package vazkii.botania.common.block;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import vazkii.botania.api.lexicon.ILexiconable;
 import vazkii.botania.api.lexicon.LexiconEntry;
 import vazkii.botania.api.state.BotaniaStateProps;
 import vazkii.botania.api.state.enums.AlfPortalState;
 import vazkii.botania.api.wand.IWandable;
-import vazkii.botania.common.achievement.ModAchievements;
+import vazkii.botania.common.advancements.AlfPortalTrigger;
 import vazkii.botania.common.block.tile.TileAlfPortal;
+import vazkii.botania.common.core.helper.PlayerHelper;
 import vazkii.botania.common.lexicon.LexiconData;
 import vazkii.botania.common.lib.LibBlockNames;
+import vazkii.botania.common.lib.LibMisc;
+
+import javax.annotation.Nonnull;
 
 public class BlockAlfPortal extends BlockMod implements IWandable, ILexiconable {
 
@@ -39,6 +44,7 @@ public class BlockAlfPortal extends BlockMod implements IWandable, ILexiconable 
 		super(Material.WOOD, LibBlockNames.ALF_PORTAL);
 		setHardness(10F);
 		setSoundType(SoundType.WOOD);
+		setDefaultState(blockState.getBaseState().withProperty(BotaniaStateProps.ALFPORTAL_STATE, AlfPortalState.OFF));
 	}
 
 	@Nonnull
@@ -62,11 +68,6 @@ public class BlockAlfPortal extends BlockMod implements IWandable, ILexiconable 
 	}
 
 	@Override
-	public IBlockState pickDefaultState() {
-		return blockState.getBaseState().withProperty(BotaniaStateProps.ALFPORTAL_STATE, AlfPortalState.OFF);
-	}
-
-	@Override
 	public boolean hasTileEntity(IBlockState state) {
 		return true;
 	}
@@ -85,8 +86,9 @@ public class BlockAlfPortal extends BlockMod implements IWandable, ILexiconable 
 	@Override
 	public boolean onUsedByWand(EntityPlayer player, ItemStack stack, World world, BlockPos pos, EnumFacing side) {
 		boolean did = ((TileAlfPortal) world.getTileEntity(pos)).onWanded();
-		if(did && player != null)
-			player.addStat(ModAchievements.elfPortalOpen, 1);
+		if(!world.isRemote && did) {
+			AlfPortalTrigger.INSTANCE.trigger((EntityPlayerMP) player, (WorldServer) world, pos, stack);
+		}
 		return did;
 	}
 

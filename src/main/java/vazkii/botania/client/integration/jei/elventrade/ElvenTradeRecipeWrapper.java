@@ -8,19 +8,16 @@
  */
 package vazkii.botania.client.integration.jei.elventrade;
 
-import java.util.List;
-
-import javax.annotation.Nonnull;
-
 import com.google.common.collect.ImmutableList;
-
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.IRecipeWrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.oredict.OreDictionary;
 import vazkii.botania.api.recipe.RecipeElvenTrade;
+
+import javax.annotation.Nonnull;
+import java.util.List;
 
 public class ElvenTradeRecipeWrapper implements IRecipeWrapper {
 
@@ -47,19 +44,4 @@ public class ElvenTradeRecipeWrapper implements IRecipeWrapper {
 		ingredients.setInputLists(ItemStack.class, input);
 		ingredients.setOutputs(ItemStack.class, outputs);
 	}
-
-	@Override
-	public void drawInfo(@Nonnull Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {}
-
-	@Nonnull
-	@Override
-	public List<String> getTooltipStrings(int mouseX, int mouseY) {
-		return ImmutableList.of();
-	}
-
-	@Override
-	public boolean handleClick(@Nonnull Minecraft minecraft, int mouseX, int mouseY, int mouseButton) {
-		return false;
-	}
-
 }

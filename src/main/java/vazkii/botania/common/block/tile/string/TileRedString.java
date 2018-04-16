@@ -10,20 +10,21 @@
  */
 package vazkii.botania.common.block.tile.string;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import vazkii.botania.api.state.BotaniaStateProps;
 import vazkii.botania.api.wand.ITileBound;
 import vazkii.botania.common.block.tile.TileMod;
 
-public abstract class TileRedString extends TileMod implements ITileBound {
+import javax.annotation.Nonnull;
+
+public abstract class TileRedString extends TileMod implements ITileBound, ITickable {
 
 	private BlockPos binding;
 
@@ -77,7 +78,11 @@ public abstract class TileRedString extends TileMod implements ITileBound {
 	}
 
 	public EnumFacing getOrientation() {
-		return world.getBlockState(getPos()).getValue(BotaniaStateProps.FACING);
+		IBlockState state = world.getBlockState(getPos());
+		if(state.getPropertyKeys().contains(BotaniaStateProps.FACING))
+			return state.getValue(BotaniaStateProps.FACING);
+		
+		return EnumFacing.WEST; // fallback
 	}
 
 	public TileEntity getTileAtBinding() {
